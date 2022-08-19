@@ -1,0 +1,95 @@
+/**
+ * JavaCC file
+ */
+ 
+options {
+  JDK_VERSION = "1.5";
+}
+PARSER_BEGIN(Parser)
+package parser;
+
+public class Parser {
+  public static void main(String args[]) throws ParseException {
+    Parser parser = new Parser(System.in);
+    while (true) {
+      System.out.println("Reading from standard input...");
+      try {
+        Parser.query();
+        System.out.println("Query successfully parsed!");
+      } catch (Exception e) {
+        System.out.println("NOK.");
+        System.out.println(e.getMessage());
+        Parser.ReInit(System.in);
+      } catch (Error e) {
+        System.out.println("Oops.");
+        System.out.println(e.getMessage());
+        break;
+      }
+    }
+  }
+}
+PARSER_END(Parser)
+
+SKIP :
+{
+ 	" "
+|	"\r"
+|	"\t"
+|	"\n"
+}
+TOKEN : /* OPERATORS */
+{
+	<STAR :"*">	
+| 	<COMPARE: <E>|<AE>|<BE>|<NE>|<A>|<B> >
+| 	<#E: "=">
+| 	<#AE: ">=">
+| 	<#BE: "<=">
+| 	<#NE: "<>">	
+| 	<#A: ">">
+| 	<#B: "<">
+|	< SELECT: "Select" | "select" | "SELECT" >
+|	<FROM: "From"|"from"| "FROM">	
+| 	<WHERE: "Where"|"where"|"WHERE">
+|	<AND: "And"|"and"|"AND">
+|	<INSERT: "Insert" |"insert" |"INSERT">
+|	<INTO: "Into"|"into" |"INTO">
+| 	<VALUES:"Values"|"values"|"VALUES" >
+|	<CREATE: "Create" |"create" | "CREATE">
+|	<TABLE: "Table"|"table"|"TABLE">
+| 	<DROP: "Drop"| "drop" |"DROP" >
+|	<DELETE: "Delete"| "delete"| "DELETE"> 	 
+| 	<ID: (["A"-"Z","a"-"z"])(["A"-"Z","a"-"z","0"-"9", "_"])*>
+|	<DATATYPE: "INTEGER"|"STRING"|"FLOAT"|"BOOLEAN" >
+|	<BOOLEAN: "true"|"false">
+|	<INT: (["1"-"9"] (["0"-"9"])*)| "0" >
+|	<FLOAT:<INT> "." (["0"-"9"])+ >
+|  	<STRING: "\""(["A"-"Z","a"-"z","0"-"9", "_"])*"\"">
+}
+
+void query() : {}
+{
+  (select()|insert()|createTable()|drop()|delete())";"
+}
+void select() : {}
+{
+	<SELECT> (<STAR>|(<ID>("."<ID>)?(","<ID>("."<ID>)?)*)) <FROM> <ID>(","<ID>)* (<WHERE> <ID>("."<ID>)?<COMPARE>(<ID>("."<ID>)?|constant()) (<AND> <ID>("."<ID>)?<COMPARE>(<ID>("."<ID>)?|constant()))*)?
+}
+void insert() : {}
+{
+	<INSERT><INTO> <ID><VALUES>"("constant()(","constant() )* ")"
+}
+void createTable() : {}
+{
+	<CREATE><TABLE><ID>"("<ID><DATATYPE>(","<ID><DATATYPE>)*")"
+}
+void drop() : {}
+{
+	<DROP><TABLE><ID>
+}
+void delete() : {}
+{
+	<DELETE><FROM> <ID> (<WHERE> <ID><COMPARE>(<ID>|constant()) (<AND> <ID><COMPARE>(<ID>|constant()))*)?
+}
+void constant():{}{
+	(<STRING>|<FLOAT>|<INT>|<BOOLEAN>)
+}
